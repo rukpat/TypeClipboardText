@@ -60,7 +60,7 @@
             // 
             contextMenuStrip.Items.AddRange(new ToolStripItem[] { toolStripMenuInstructClipboardDisabled, toolStripClipboardText, toolStripSeparator1, toolStripMenuInstructWindowsDisabled, toolStripSeparator2, menuExit });
             contextMenuStrip.Name = "contextMenuStrip";
-            contextMenuStrip.Size = new Size(361, 127);
+            contextMenuStrip.Size = new Size(361, 105);
             contextMenuStrip.Text = "Keypress";
             contextMenuStrip.Opening += contextMenuStrip_Opening;
             contextMenuStrip.ItemClicked += contextMenuStrip_ItemClicked;
@@ -69,13 +69,14 @@
             // 
             toolStripMenuInstructClipboardDisabled.BackColor = SystemColors.InactiveCaption;
             toolStripMenuInstructClipboardDisabled.Enabled = false;
+            toolStripMenuInstructClipboardDisabled.Image = Properties.Resources._9104219_warning_danger_attention_caution_alert_icon1;
             toolStripMenuInstructClipboardDisabled.Name = "toolStripMenuInstructClipboardDisabled";
             toolStripMenuInstructClipboardDisabled.Size = new Size(360, 22);
             toolStripMenuInstructClipboardDisabled.Text = "1. Clipboard Text (edit if required):";
             // 
             // toolStripClipboardText
             // 
-            toolStripClipboardText.BackColor = SystemColors.Info;
+            toolStripClipboardText.BackColor = Color.MistyRose;
             toolStripClipboardText.BorderStyle = BorderStyle.FixedSingle;
             toolStripClipboardText.Font = new Font("Courier New", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
             toolStripClipboardText.MaxLength = 10;
@@ -103,9 +104,10 @@
             // 
             // menuExit
             // 
+            menuExit.Image = Properties.Resources._4879885_close_cross_delete_remove_icon;
             menuExit.Name = "menuExit";
             menuExit.Size = new Size(360, 22);
-            menuExit.Text = "E&xit";
+            menuExit.Text = "E&xit Application";
             menuExit.Click += menuExit_Click;
             // 
             // label1

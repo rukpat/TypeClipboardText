@@ -48,6 +48,9 @@ namespace TypeClipboardText
 
         [DllImport("user32.dll", EntryPoint = "GetClassLongPtr")]
         static extern IntPtr GetClassLongPtr64(IntPtr hWnd, int nIndex);
+        
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        static extern IntPtr LoadIcon(IntPtr hInstance, IntPtr lpIconName);
 
         const string DEFAULT_TYPE_TEXT = "<Enter Text>";
 
@@ -92,12 +95,16 @@ namespace TypeClipboardText
             // Add active windows as menu items, starting from the 5th position
             for (int i = 0; i < activeWindowsList.Count; i++)
             {
-#pragma warning disable CS8605 // Unboxing a possibly null value.
-                var (hWnd, title) = ((IntPtr, string))activeWindowsList[i];
-#pragma warning restore CS8605 // Unboxing a possibly null value.
+                var (hWnd, title, icon) = ((IntPtr, string, Icon))activeWindowsList[i];
 
                 ToolStripMenuItem item = new ToolStripMenuItem($"{hWnd}: {title} ");
                 item.Tag = hWnd; // Store the hWnd in the Tag property for later use append "A" for Auto
+
+                if (icon != null) // Set the icon for the menu item
+                {
+                    item.Image = icon.ToBitmap();
+                }
+
                 contextMenuStrip.Items.Insert(SEPERATOR_START + i, item);
             }
         }
@@ -113,11 +120,6 @@ namespace TypeClipboardText
                     StringBuilder sb = new(size);  // Windows Title
                     GetWindowText(hWnd, sb, size);
 
-                    lock (lockObject) // Synchronize access to runningWindowsList
-                    {
-                        // Store a tuple of hWnd and title in the ArrayList
-                        activeWindowsList.Add((hWnd, sb.ToString()));
-                    }
                     // Get the window's icon
                     Icon icon = GetWindowIcon(hWnd);
                     lock (lockObject)
@@ -130,6 +132,29 @@ namespace TypeClipboardText
             }
             return true;
         }
+
+        private Icon GetWindowIcon(IntPtr hWnd)
+        {
+            IntPtr hIcon = SendMessage(hWnd, 0x0080/*WM_GETICON*/, 2/*ICON_SMALL2*/, 0);
+            if (hIcon == IntPtr.Zero)
+                hIcon = GetClassLongPtr(hWnd, -14/*GCL_HICONSM*/);
+            if (hIcon == IntPtr.Zero)
+                hIcon = LoadIcon(IntPtr.Zero, (IntPtr)0x7F00/*IDI_APPLICATION*/);
+            if (hIcon != IntPtr.Zero)
+                return Icon.FromHandle(hIcon);
+            else
+                return null;
+        }
+
+        // This static method will return long for both 32 bit and 64 bit architecture
+        static IntPtr GetClassLongPtr(IntPtr hWnd, int nIndex)
+        {
+            if (IntPtr.Size == 8)
+                return GetClassLongPtr64(hWnd, nIndex);
+            else
+                return new IntPtr(GetClassLongPtr32(hWnd, nIndex));
+        }
+
 
         private string UpdateTextFromClipboard()
         {
