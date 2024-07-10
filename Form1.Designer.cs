@@ -60,7 +60,7 @@
             // 
             contextMenuStrip.Items.AddRange(new ToolStripItem[] { toolStripMenuInstructClipboardDisabled, toolStripClipboardText, toolStripSeparator1, toolStripMenuInstructWindowsDisabled, toolStripSeparator2, menuExit });
             contextMenuStrip.Name = "contextMenuStrip";
-            contextMenuStrip.Size = new Size(361, 105);
+            contextMenuStrip.Size = new Size(361, 127);
             contextMenuStrip.Text = "Keypress";
             contextMenuStrip.Opening += contextMenuStrip_Opening;
             contextMenuStrip.ItemClicked += contextMenuStrip_ItemClicked;

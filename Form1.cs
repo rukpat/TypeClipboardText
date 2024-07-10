@@ -1,11 +1,9 @@
-using System;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Collections;
+using System.Drawing;
 using TextCopy;
-using System.ComponentModel.DataAnnotations;
-using System.Windows.Forms;
-using System.ComponentModel;
+using Interop.UIAutomationClient;
 
 namespace TypeClipboardText
 {
@@ -42,14 +40,21 @@ namespace TypeClipboardText
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool SetForegroundWindow(IntPtr hWnd);
 
-        [DllImport("user32.dll")]
-        private static extern uint SendInput(uint nInputs, [MarshalAs(UnmanagedType.LPArray), In] INPUT[] pInputs, int cbSize);
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+
+        [DllImport("user32.dll", EntryPoint = "GetClassLong")]
+        static extern uint GetClassLongPtr32(IntPtr hWnd, int nIndex);
+
+        [DllImport("user32.dll", EntryPoint = "GetClassLongPtr")]
+        static extern IntPtr GetClassLongPtr64(IntPtr hWnd, int nIndex);
 
         const string DEFAULT_TYPE_TEXT = "<Enter Text>";
 
         private object lockObject = new object();  // For thread synchronization
 
         private ArrayList activeWindowsList = new ArrayList(); // List of active windows for the menu
+        private Dictionary<IntPtr, Icon> windowIcons = new Dictionary<IntPtr, Icon>();  // for getting the icons of the windows
 
         private (IntPtr Handle, string Title) getFirstActiveWindow()
         {
@@ -113,6 +118,14 @@ namespace TypeClipboardText
                         // Store a tuple of hWnd and title in the ArrayList
                         activeWindowsList.Add((hWnd, sb.ToString()));
                     }
+                    // Get the window's icon
+                    Icon icon = GetWindowIcon(hWnd);
+                    lock (lockObject)
+                    {
+                        // Store a tuple of hWnd, title and Icon in the ArrayList
+                        activeWindowsList.Add((hWnd, sb.ToString(), icon)); 
+                        windowIcons[hWnd] = icon; // Store icon in the dictionary
+                    }
                 }
             }
             return true;
@@ -138,58 +151,46 @@ namespace TypeClipboardText
             return clipboardText;
         }
 
-        [StructLayout(LayoutKind.Sequential)]
-        private struct INPUT
-        {
-            public uint type;
-            public ushort wVk;
-            public ushort wScan;
-            public uint dwFlags;
-            public uint time;
-            public IntPtr dwExtraInfo;
-        }
-        private void TypeFromClipboard()
+        private void TypeFromClipboard(IntPtr hWnd)
         {
             string keypressText = UpdateTextFromClipboard();
 
+            //string clipboardText = ClipboardService.GetText() ?? string.Empty;
+
             if (!string.IsNullOrEmpty(keypressText))
             {
-                var inputs = keypressText.Select(c => new INPUT
-                {
-                    type = 1, // INPUT_KEYBOARD Keyboard input
-                    wVk = 0,
-                    wScan = (ushort)c,
-                    dwFlags = 0,
-                    time = 0,
-                    dwExtraInfo = IntPtr.Zero
-                }).ToArray();
-
                 try
                 {
-                    Thread.Sleep(100);
-                    uint result = SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
-                    Thread.Sleep(100);
-                    if (result != (uint)inputs.Length) // Check for expected result
-                    {
-                        int errorCode = Marshal.GetLastWin32Error();
-                        if (errorCode != 0) // Handle explicit errors
-                        {
-                            string errorMessage = new Win32Exception(errorCode).Message;
-                            LogMessage($"SendInput failed with error code {errorCode}: {errorMessage}");
-                            // MessageBox.Show($"Error typing clipboard text: {errorMessage}", "TypeClipboard Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                        else // If errorCode is 0, but result is not expected
-                        {
-                            LogMessage($"SendInput returned {result} (expected {inputs.Length}), but GetLastError returned 0 (no error). Investigation needed.");
-                        }
-                    }
-                    else
-                    {
-                        LogMessage($"TypeFromClipboard sent '{keypressText}' as keypress"); // Log success only if all keys were sent
-                    }
+
+                    IUIAutomation automation = new CUIAutomation(); // Create UIAutomation instance
+                    IUIAutomationElement targetWindow = automation.ElementFromHandle(hWnd);
+
+                    // Set focus to the window itself (just in case)
+                    targetWindow.SetFocus();
+
+                    //Wait for a bit
+                    System.Threading.Thread.Sleep(500);
+
+                    // Use the SendKeys method to send the clipboard text
+                    // Escape special characters for SendKeys
+                    keypressText = keypressText
+                        .Replace("+", "{+}")
+                        .Replace("^", "{^}")
+                        .Replace("%", "{%}")
+                        .Replace("~", "{~}")
+                        .Replace("(", "{(}")
+                        .Replace(")", "{)}")
+                        .Replace("{", "{{}")
+                        .Replace("}", "{}}")
+                        .Replace("[", "{[]}")
+                        .Replace("]", "{[]}");
+                    System.Windows.Forms.SendKeys.SendWait(keypressText);
+
+                    LogMessage($"TypeFromClipboard sent '{keypressText}' as keypress using UIAutomation (SendKeys)");
                 }
                 catch (Exception ex)
                 {
+                    LogMessage($"Error typing clipboard text using UIAutomation: {ex.Message}");
                     MessageBox.Show($"Error typing clipboard text: {ex.Message}", "TypeClipboard Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
@@ -197,8 +198,8 @@ namespace TypeClipboardText
             {
                 MessageBox.Show($"Clipboard does not have any text!\r\n Right-click the application in system tray and enter text OR copy text to the Clipboard {keypressText}", "TypeClipboardText", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
-            LogMessage($"TypeFromClipboard sent '{keypressText}' as keypress");
         }
+
         private void LogMessage(string message)
         {
             // Create a formatted log entry
@@ -233,15 +234,11 @@ namespace TypeClipboardText
             LogMessage($"notifyIcon_MouseDoubleClick first active window: hWnd={hWnd} title={title}");
             // bring the window to the foreground
             if (hWnd != IntPtr.Zero)
+            {
                 SetForegroundWindow(hWnd);
-
-            // send key stroke 
-            TypeFromClipboard();
-        }
-
-        private void menuTypeClipboardText_Click(object sender, EventArgs e)
-        {
-            // TypeFromClipboard(sender, e);
+                // send key stroke 
+                TypeFromClipboard(hWnd);
+            }
         }
 
         private void contextMenuStrip_Opening(object sender, System.ComponentModel.CancelEventArgs e)
@@ -249,6 +246,8 @@ namespace TypeClipboardText
             UpdateTextFromClipboard();
             UpdateContextMenuWithActiveWindowsList();
 
+            // Set width of toolStripClipboardText to match contextMenuStrip
+            toolStripClipboardText.Size = new Size(contextMenuStrip.Width, 21); // contextMenuStrip.Width;
         }
 
         private void contextMenuStrip_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
@@ -265,18 +264,16 @@ namespace TypeClipboardText
 
                 // Activate the window (bring it to the foreground)
                 if (hWnd != IntPtr.Zero)
+                {
                     SetForegroundWindow(hWnd);
-                TypeFromClipboard();
+                    // send key stroke
+                    TypeFromClipboard(hWnd);
+                }
             }
             catch
             {
                 //Ignore errors
             }
-
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
 
         }
 
