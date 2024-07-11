@@ -60,7 +60,7 @@
             // 
             contextMenuStrip.Items.AddRange(new ToolStripItem[] { toolStripMenuInstructClipboardDisabled, toolStripClipboardText, toolStripSeparator1, toolStripMenuInstructWindowsDisabled, toolStripSeparator2, menuExit });
             contextMenuStrip.Name = "contextMenuStrip";
-            contextMenuStrip.Size = new Size(361, 105);
+            contextMenuStrip.Size = new Size(363, 139);
             contextMenuStrip.Text = "Keypress";
             contextMenuStrip.Opening += contextMenuStrip_Opening;
             contextMenuStrip.ItemClicked += contextMenuStrip_ItemClicked;
@@ -69,9 +69,10 @@
             // 
             toolStripMenuInstructClipboardDisabled.BackColor = SystemColors.InactiveCaption;
             toolStripMenuInstructClipboardDisabled.Enabled = false;
+            toolStripMenuInstructClipboardDisabled.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
             toolStripMenuInstructClipboardDisabled.Image = Properties.Resources._9104219_warning_danger_attention_caution_alert_icon1;
             toolStripMenuInstructClipboardDisabled.Name = "toolStripMenuInstructClipboardDisabled";
-            toolStripMenuInstructClipboardDisabled.Size = new Size(360, 22);
+            toolStripMenuInstructClipboardDisabled.Size = new Size(362, 26);
             toolStripMenuInstructClipboardDisabled.Text = "1. Clipboard Text (edit if required):";
             // 
             // toolStripClipboardText
@@ -87,27 +88,29 @@
             // toolStripSeparator1
             // 
             toolStripSeparator1.Name = "toolStripSeparator1";
-            toolStripSeparator1.Size = new Size(357, 6);
+            toolStripSeparator1.Size = new Size(359, 6);
             // 
             // toolStripMenuInstructWindowsDisabled
             // 
             toolStripMenuInstructWindowsDisabled.BackColor = SystemColors.InactiveCaption;
             toolStripMenuInstructWindowsDisabled.Enabled = false;
+            toolStripMenuInstructWindowsDisabled.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            toolStripMenuInstructWindowsDisabled.Image = Properties.Resources._211615_down_c_arrow_icon;
             toolStripMenuInstructWindowsDisabled.Name = "toolStripMenuInstructWindowsDisabled";
-            toolStripMenuInstructWindowsDisabled.Size = new Size(360, 22);
+            toolStripMenuInstructWindowsDisabled.Size = new Size(362, 26);
             toolStripMenuInstructWindowsDisabled.Text = "2. Select Window to send as keypress:";
             // 
             // toolStripSeparator2
             // 
             toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(357, 6);
+            toolStripSeparator2.Size = new Size(359, 6);
             // 
             // menuExit
             // 
             menuExit.Image = Properties.Resources._4879885_close_cross_delete_remove_icon;
             menuExit.Name = "menuExit";
-            menuExit.Size = new Size(360, 22);
-            menuExit.Text = "E&xit Application";
+            menuExit.Size = new Size(362, 26);
+            menuExit.Text = "&Quit Application";
             menuExit.Click += menuExit_Click;
             // 
             // label1

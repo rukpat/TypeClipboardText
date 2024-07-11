@@ -1,9 +1,10 @@
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Collections;
-using System.Drawing;
 using TextCopy;
 using Interop.UIAutomationClient;
+
 
 namespace TypeClipboardText
 {
@@ -63,9 +64,8 @@ namespace TypeClipboardText
         {
             for (int i = 0; i < activeWindowsList.Count; i++)
             {
-#pragma warning disable CS8605 // Unboxing a possibly null value.
-                var (hWnd, title) = ((IntPtr, string))activeWindowsList[i];
-#pragma warning restore CS8605 // Unboxing a possibly null value.
+
+                var (hWnd, title, icon) = ((IntPtr, string, Icon))activeWindowsList[i];
 
                 if (!(title.Contains("TypeClipboardText") || title.Contains("PopupHost")))
                 {
@@ -97,7 +97,7 @@ namespace TypeClipboardText
             {
                 var (hWnd, title, icon) = ((IntPtr, string, Icon))activeWindowsList[i];
 
-                ToolStripMenuItem item = new ToolStripMenuItem($"{hWnd}: {title} ");
+                ToolStripMenuItem item = new ToolStripMenuItem($"{title}");
                 item.Tag = hWnd; // Store the hWnd in the Tag property for later use append "A" for Auto
 
                 if (icon != null) // Set the icon for the menu item
@@ -178,12 +178,31 @@ namespace TypeClipboardText
 
         private void TypeFromClipboard(IntPtr hWnd)
         {
+            const int MAX_TEXT_LENGTH = 50;
             string keypressText = UpdateTextFromClipboard();
 
             //string clipboardText = ClipboardService.GetText() ?? string.Empty;
 
             if (!string.IsNullOrEmpty(keypressText))
             {
+
+                // Check if text exceeds the maximum length
+                if (keypressText.Length > MAX_TEXT_LENGTH)
+                {
+                    DialogResult result = MessageBox.Show(
+                        $"The Clipboard text is {keypressText.Length} characters long.\r\n\r\nThis will cause a long wait and might cause issues if you interrupt.\r\n\r\n\r\n Do you want to proceed?",
+                        "Warning: Long Clipboard Text",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+
+                    if (result == DialogResult.No)
+                    {
+                        LogMessage("User canceled typing due to long clipboard text.");
+                        return; // Exit the function if the user cancels
+                    }
+                }
+
+
                 try
                 {
 
@@ -196,9 +215,10 @@ namespace TypeClipboardText
                     //Wait for a bit
                     System.Threading.Thread.Sleep(500);
 
+
                     // Use the SendKeys method to send the clipboard text
                     // Escape special characters for SendKeys
-                    keypressText = keypressText
+                    /*keypressText = keypressText  // Error causing nexting of replacements
                         .Replace("+", "{+}")
                         .Replace("^", "{^}")
                         .Replace("%", "{%}")
@@ -209,9 +229,12 @@ namespace TypeClipboardText
                         .Replace("}", "{}}")
                         .Replace("[", "{[]}")
                         .Replace("]", "{[]}");
-                    System.Windows.Forms.SendKeys.SendWait(keypressText);
+                    */
+                    keypressText = Regex.Replace(keypressText, @"([+\^%~(){}[\]])", "{$1}");
 
-                    LogMessage($"TypeFromClipboard sent '{keypressText}' as keypress using UIAutomation (SendKeys)");
+                    LogMessage($"SendKeys will send: '{keypressText}'");
+                    System.Windows.Forms.SendKeys.SendWait(keypressText);
+                    LogMessage($"SentKeys sent: '{keypressText}'");
                 }
                 catch (Exception ex)
                 {
@@ -253,6 +276,7 @@ namespace TypeClipboardText
         {
             // Get the last active window
             UpdateActiveWindowsList();
+            UpdateContextMenuWithActiveWindowsList();
 
             // find first active window that is not .this application
             var (hWnd, title) = getFirstActiveWindow();
@@ -268,6 +292,8 @@ namespace TypeClipboardText
 
         private void contextMenuStrip_Opening(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            toolStripClipboardText.Size = new Size(100, 21);
+
             UpdateTextFromClipboard();
             UpdateContextMenuWithActiveWindowsList();
 

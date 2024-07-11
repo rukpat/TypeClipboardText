@@ -63,6 +63,26 @@ namespace TypeClipboardText.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap _10131944_door_exit_line_icon {
+            get {
+                object obj = ResourceManager.GetObject("10131944_door_exit_line_icon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap _211615_down_c_arrow_icon {
+            get {
+                object obj = ResourceManager.GetObject("211615_down_c_arrow_icon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap _4879885_close_cross_delete_remove_icon {
             get {
                 object obj = ResourceManager.GetObject("4879885_close_cross_delete_remove_icon", resourceCulture);
