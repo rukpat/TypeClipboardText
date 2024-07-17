@@ -1,6 +1,6 @@
 ﻿namespace TypeClipboardText
 {
-    partial class Form1
+    partial class TCT
     {
         /// <summary>
         ///  Required designer variable.
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TCT));
             notifyIcon = new NotifyIcon(components);
             contextMenuStrip = new ContextMenuStrip(components);
             toolStripMenuInstructClipboardDisabled = new ToolStripMenuItem();
@@ -62,7 +62,7 @@
             // 
             contextMenuStrip.Items.AddRange(new ToolStripItem[] { toolStripMenuInstructClipboardDisabled, toolStripClipboardText, toolStripSeparator1, toolStripMenuInstructWindowsDisabled, toolStripSeparator2, toolStripMenuItemShowWindow, menuExit });
             contextMenuStrip.Name = "contextMenuStrip";
-            contextMenuStrip.Size = new Size(363, 165);
+            contextMenuStrip.Size = new Size(363, 143);
             contextMenuStrip.Text = "Keypress";
             contextMenuStrip.Opening += contextMenuStrip_Opening;
             contextMenuStrip.ItemClicked += contextMenuStrip_ItemClicked;
@@ -196,7 +196,7 @@
             buttonCopyLogs.UseVisualStyleBackColor = true;
             buttonCopyLogs.Click += buttonCopyLogs_Click;
             // 
-            // Form1
+            // TCT
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -214,7 +214,7 @@
             Icon = (Icon)resources.GetObject("$this.Icon");
             MaximizeBox = false;
             MinimizeBox = false;
-            Name = "Form1";
+            Name = "TCT";
             SizeGripStyle = SizeGripStyle.Hide;
             Text = "TypeClipboardText";
             FormClosing += Form1_FormClosing;

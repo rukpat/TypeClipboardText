@@ -8,9 +8,9 @@ using Interop.UIAutomationClient;
 
 namespace TypeClipboardText
 {
-    public partial class Form1 : Form
+    public partial class TCT : Form
     {
-        public Form1()
+        public TCT()
         {
             InitializeComponent();
             UpdateTextFromClipboard();
