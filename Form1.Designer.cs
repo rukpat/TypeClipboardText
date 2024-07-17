@@ -37,6 +37,7 @@
             toolStripSeparator1 = new ToolStripSeparator();
             toolStripMenuInstructWindowsDisabled = new ToolStripMenuItem();
             toolStripSeparator2 = new ToolStripSeparator();
+            toolStripMenuItemShowWindow = new ToolStripMenuItem();
             menuExit = new ToolStripMenuItem();
             label1 = new Label();
             textClipboard = new TextBox();
@@ -50,6 +51,7 @@
             // 
             // notifyIcon
             // 
+            notifyIcon.BalloonTipIcon = ToolTipIcon.Info;
             notifyIcon.ContextMenuStrip = contextMenuStrip;
             notifyIcon.Icon = (Icon)resources.GetObject("notifyIcon.Icon");
             notifyIcon.Text = "Send as keypress clipboard text to the active window";
@@ -58,9 +60,9 @@
             // 
             // contextMenuStrip
             // 
-            contextMenuStrip.Items.AddRange(new ToolStripItem[] { toolStripMenuInstructClipboardDisabled, toolStripClipboardText, toolStripSeparator1, toolStripMenuInstructWindowsDisabled, toolStripSeparator2, menuExit });
+            contextMenuStrip.Items.AddRange(new ToolStripItem[] { toolStripMenuInstructClipboardDisabled, toolStripClipboardText, toolStripSeparator1, toolStripMenuInstructWindowsDisabled, toolStripSeparator2, toolStripMenuItemShowWindow, menuExit });
             contextMenuStrip.Name = "contextMenuStrip";
-            contextMenuStrip.Size = new Size(363, 139);
+            contextMenuStrip.Size = new Size(363, 165);
             contextMenuStrip.Text = "Keypress";
             contextMenuStrip.Opening += contextMenuStrip_Opening;
             contextMenuStrip.ItemClicked += contextMenuStrip_ItemClicked;
@@ -83,7 +85,6 @@
             toolStripClipboardText.MaxLength = 10;
             toolStripClipboardText.Name = "toolStripClipboardText";
             toolStripClipboardText.Size = new Size(300, 21);
-            toolStripClipboardText.Text = "<Enter Text>";
             // 
             // toolStripSeparator1
             // 
@@ -104,6 +105,15 @@
             // 
             toolStripSeparator2.Name = "toolStripSeparator2";
             toolStripSeparator2.Size = new Size(359, 6);
+            // 
+            // toolStripMenuItemShowWindow
+            // 
+            toolStripMenuItemShowWindow.Image = Properties.Resources._9042799_open_in_window_icon;
+            toolStripMenuItemShowWindow.Name = "toolStripMenuItemShowWindow";
+            toolStripMenuItemShowWindow.RightToLeftAutoMirrorImage = true;
+            toolStripMenuItemShowWindow.Size = new Size(362, 26);
+            toolStripMenuItemShowWindow.Text = "&Show Window";
+            toolStripMenuItemShowWindow.Click += toolStripMenuItemShowWindow_Click;
             // 
             // menuExit
             // 
@@ -131,7 +141,7 @@
             textClipboard.Name = "textClipboard";
             textClipboard.ReadOnly = true;
             textClipboard.ScrollBars = ScrollBars.Vertical;
-            textClipboard.Size = new Size(882, 213);
+            textClipboard.Size = new Size(882, 112);
             textClipboard.TabIndex = 2;
             // 
             // labelClipboardLength
@@ -160,7 +170,7 @@
             // 
             label2.AutoSize = true;
             label2.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label2.Location = new Point(12, 261);
+            label2.Location = new Point(12, 155);
             label2.Name = "label2";
             label2.Size = new Size(30, 15);
             label2.TabIndex = 5;
@@ -168,16 +178,17 @@
             // 
             // listLog
             // 
+            listLog.BackColor = SystemColors.Control;
             listLog.FormattingEnabled = true;
             listLog.ItemHeight = 15;
-            listLog.Location = new Point(12, 279);
+            listLog.Location = new Point(12, 174);
             listLog.Name = "listLog";
-            listLog.Size = new Size(882, 184);
+            listLog.Size = new Size(882, 289);
             listLog.TabIndex = 6;
             // 
             // buttonCopyLogs
             // 
-            buttonCopyLogs.Location = new Point(819, 253);
+            buttonCopyLogs.Location = new Point(819, 147);
             buttonCopyLogs.Name = "buttonCopyLogs";
             buttonCopyLogs.Size = new Size(75, 23);
             buttonCopyLogs.TabIndex = 7;
@@ -189,6 +200,8 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
+            AutoSize = true;
+            BackColor = SystemColors.Control;
             ClientSize = new Size(908, 476);
             Controls.Add(buttonCopyLogs);
             Controls.Add(listLog);
@@ -197,9 +210,16 @@
             Controls.Add(labelClipboardLength);
             Controls.Add(textClipboard);
             Controls.Add(label1);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
             Icon = (Icon)resources.GetObject("$this.Icon");
+            MaximizeBox = false;
+            MinimizeBox = false;
             Name = "Form1";
+            SizeGripStyle = SizeGripStyle.Hide;
             Text = "TypeClipboardText";
+            FormClosing += Form1_FormClosing;
+            Load += Form1_Load;
+            Shown += Form1_Shown;
             contextMenuStrip.ResumeLayout(false);
             contextMenuStrip.PerformLayout();
             ResumeLayout(false);
@@ -223,5 +243,6 @@
         private Label label2;
         private ListBox listLog;
         private Button buttonCopyLogs;
+        private ToolStripMenuItem toolStripMenuItemShowWindow;
     }
 }

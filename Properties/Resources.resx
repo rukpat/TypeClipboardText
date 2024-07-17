@@ -121,13 +121,16 @@
   <data name="4879885_close_cross_delete_remove_icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\4879885_close_cross_delete_remove_icon.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="10131944_door_exit_line_icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\10131944_door_exit_line_icon.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="9104219_warning_danger_attention_caution_alert_icon1" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\9104219_warning_danger_attention_caution_alert_icon.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="211615_down_c_arrow_icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\211615_down_c_arrow_icon.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="10131944_door_exit_line_icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\10131944_door_exit_line_icon.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="9042799_open_in_window_icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\9042799_open_in_window_icon.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

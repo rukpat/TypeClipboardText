@@ -6,7 +6,12 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>Resources\TypeClipboardText.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Resources\TypeClipboardText.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Interop.UIAutomationClient.Signed" Version="10.19041.0" />

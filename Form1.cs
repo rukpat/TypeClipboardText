@@ -13,8 +13,9 @@ namespace TypeClipboardText
         public Form1()
         {
             InitializeComponent();
-
             UpdateTextFromClipboard();
+            this.Hide();
+            this.WindowState = FormWindowState.Minimized;
         }
 
 
@@ -49,11 +50,11 @@ namespace TypeClipboardText
 
         [DllImport("user32.dll", EntryPoint = "GetClassLongPtr")]
         static extern IntPtr GetClassLongPtr64(IntPtr hWnd, int nIndex);
-        
+
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         static extern IntPtr LoadIcon(IntPtr hInstance, IntPtr lpIconName);
 
-        const string DEFAULT_TYPE_TEXT = "<Enter Text>";
+        const string DEFAULT_TYPE_TEXT = "[N o   T e x t   o n   C l i p b o a r d !]";
 
         private object lockObject = new object();  // For thread synchronization
 
@@ -84,7 +85,7 @@ namespace TypeClipboardText
         private void UpdateContextMenuWithActiveWindowsList()
         {
             int SEPERATOR_START = 4;
-            int SEPERATOR_END = contextMenuStrip.Items.Count - 2;  //End - 2 Seperator and Exit
+            int SEPERATOR_END = contextMenuStrip.Items.Count - 3;  //End - 2 Seperator and Exit
 
             UpdateActiveWindowsList(); // enum the callback to fill activeWindowsList ArrayList
 
@@ -125,7 +126,7 @@ namespace TypeClipboardText
                     lock (lockObject)
                     {
                         // Store a tuple of hWnd, title and Icon in the ArrayList
-                        activeWindowsList.Add((hWnd, sb.ToString(), icon)); 
+                        activeWindowsList.Add((hWnd, sb.ToString(), icon));
                         windowIcons[hWnd] = icon; // Store icon in the dictionary
                     }
                 }
@@ -244,7 +245,7 @@ namespace TypeClipboardText
             }
             else
             {
-                MessageBox.Show($"Clipboard does not have any text!\r\n Right-click the application in system tray and enter text OR copy text to the Clipboard {keypressText}", "TypeClipboardText", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                MessageBox.Show($"Clipboard does not have any text!\r\n\r\nCopy some text to the Clipboard first.", "TypeClipboardText", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
         }
 
@@ -352,6 +353,31 @@ namespace TypeClipboardText
         {
             CopyLogMessagesToClipboard();
             UpdateTextFromClipboard();
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                e.Cancel = true;
+                this.Hide();
+                notifyIcon.ShowBalloonTip(1000, "TypeClipboardText", "Application is still running in the system tray.", ToolTipIcon.Info);
+            }
+        }
+
+        private void toolStripMenuItemShowWindow_Click(object sender, EventArgs e)
+        {
+            this.Show();
+        }
+
+        private void Form1_Shown(object sender, EventArgs e)
+        {
+            this.Hide();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            this.Hide();
         }
     }
 }
