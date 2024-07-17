@@ -60,7 +60,7 @@ TypeClipboardText is a Windows utility that allows you to easily send the conten
 - Contributions are welcome! Please feel free to submit bug reports, feature requests, or p= ull requests.
 
 ## License
-- This project is licensed under the MIT License. See the LICENSE file for details.
+- This project is licensed under the MIT License. See the [LICENSE](https://github.com/rukpat/TypeClipboardText/blob/master/LICENSE.txt) file for details.
    
 ## Acknowledgements
 - This project utilizes the `TextCopy` library for clipboard operations.
