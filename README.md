@@ -2,13 +2,13 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-TypeClipboardText is a Windows utility that allows you to easily send the contents of your clipboard as keystrokes to any active window. This is particularly useful for automating repetitive typing tasks or inserting text into applications that don't support direct pasting.
+TypeClipboardText is a Windows utility that allows you to send the contents of your clipboard as keystrokes to any active window. This is useful for websites or applications that have disabled the Clipboard Paste command on text boxes.
 
 ## Features
 
 - **System Tray Integration:** The application runs discreetly in the system tray, accessible via a right-click context menu.
 - **Active Window Selection:**  Dynamically lists all active windows in the context menu for easy selection.
-- **UI Automation:** Uses UI Automation to reliably send keystrokes to windows, even those with elevated privileges.
+- **UI Automation:** Uses UI Automation to reliably send keystrokes to Windows, even those with elevated privileges.
 - **Logging:** Provides a log of actions and errors for troubleshooting.
 - **Special Character Handling:**  Escapes special characters in the clipboard text for accurate input.
 
@@ -57,7 +57,7 @@ TypeClipboardText is a Windows utility that allows you to easily send the conten
 
 
 ## Contributing
-- Contributions are welcome! Please feel free to submit bug reports, feature requests, or p= ull requests.
+- Contributions are welcome! Please submit bug reports, feature requests, or pull requests.
 
 ## License
 - This project is licensed under the MIT License. See the [LICENSE](https://github.com/rukpat/TypeClipboardText/blob/master/LICENSE.txt) file for details.
