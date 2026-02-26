@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-TypeClipboardText is a Windows utility that allows you to send the contents of your clipboard as keystrokes to any active window. This is useful for websites or applications that have disabled the Clipboard Paste command on text boxes.
+TypeClipboardText is a Windows utility that allows you to send the contents of your clipboard as keystrokes to any active window. This is useful for websites or applications that have disabled the Clipboard Copy & Paste command on text boxes.
 
 ## Features
 
@@ -11,12 +11,15 @@ TypeClipboardText is a Windows utility that allows you to send the contents of y
 - **UI Automation:** Uses UI Automation to reliably send keystrokes to Windows, even those with elevated privileges.
 - **Logging:** Provides a log of actions and errors for troubleshooting.
 - **Special Character Handling:**  Escapes special characters in the clipboard text for accurate input.
+- **Exclude Phrases (Filter):** Add words or phrases to an exclude list in the main window; any active window whose title contains a phrase on that list will be hidden from the right-click tray menu and ignored by the automatic double‑click send.
+- **Persistent Exclude List:** The exclude phrases are saved to `%AppData%\TypeClipboardText\exclude.txt` and reloaded on startup so your filters persist between runs.
+- **Logging control:** Logging is disabled by default. Use the `Enable Logging` checkbox to turn logging on. You can `Copy Logs` to the clipboard or `Clear Logs` from the UI.
 
 ## Installation
 
 1. **Download:** Download the latest release from the [Releases](https://github.com/rukpat/TypeClipboardText/releases) page.
 2. **Extract:** Extract the ZIP file to a desired location.
-3. **Run:** Double-click the `TypeClipboardText.exe` file to start the application.
+3. **Run:** Double-click the `TypeClipboardText.exe` file to start the application. You can add to startup menu or create a shortcut on the desktop for easier access.
 
 ## Usage
 

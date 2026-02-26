@@ -2,6 +2,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Collections;
+using System.IO;
+using System.Linq;
 using TextCopy;
 using Interop.UIAutomationClient;
 
@@ -13,6 +15,9 @@ namespace TypeClipboardText
         public TCT()
         {
             InitializeComponent();
+            // Load persisted exclude phrases before UI updates
+            LoadExcludePhrases();
+
             UpdateTextFromClipboard();
             this.Hide();
             this.WindowState = FormWindowState.Minimized;
@@ -59,18 +64,75 @@ namespace TypeClipboardText
         private object lockObject = new object();  // For thread synchronization
 
         private ArrayList activeWindowsList = new ArrayList(); // List of active windows for the menu
-        private Dictionary<IntPtr, Icon> windowIcons = new Dictionary<IntPtr, Icon>();  // for getting the icons of the windows
+        private Dictionary<IntPtr, Icon?> windowIcons = new Dictionary<IntPtr, Icon?>();  // for getting the icons of the windows
+        // Logging is disabled by default. Use the checkbox in the UI to enable.
+        private bool loggingEnabled = false;
+        // Phrases to exclude windows whose title contains any of these (case-insensitive)
+        private List<string> excludePhrases = new List<string>();
+
+        // File where exclude phrases are persisted
+        private string ExcludeFilePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TypeClipboardText", "exclude.txt");
+
+        private void LoadExcludePhrases()
+        {
+            try
+            {
+                string path = ExcludeFilePath;
+                if (File.Exists(path))
+                {
+                    var lines = File.ReadAllLines(path)
+                        .Select(l => l.Trim())
+                        .Where(l => !string.IsNullOrEmpty(l))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+                    excludePhrases = lines;
+                }
+
+                // Populate the UI list if available
+                if (listExclude != null)
+                {
+                    listExclude.Items.Clear();
+                    foreach (var p in excludePhrases)
+                        listExclude.Items.Add(p);
+                }
+            }
+            catch
+            {
+                // ignore load errors
+            }
+        }
+
+        private void SaveExcludePhrases()
+        {
+            try
+            {
+                string dir = Path.GetDirectoryName(ExcludeFilePath) ?? string.Empty;
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+
+                File.WriteAllLines(ExcludeFilePath, excludePhrases);
+            }
+            catch
+            {
+                // ignore save errors
+            }
+        }
 
         private (IntPtr Handle, string Title) getFirstActiveWindow()
         {
             for (int i = 0; i < activeWindowsList.Count; i++)
             {
-
-                var (hWnd, title, icon) = ((IntPtr, string, Icon))activeWindowsList[i];
-
-                if (!(title.Contains("TypeClipboardText") || title.Contains("PopupHost")))
+                if (activeWindowsList[i] is ValueTuple<IntPtr, string, Icon?> tuple)
                 {
-                    return (hWnd, title);
+                    var (hWnd, title, icon) = tuple;
+
+                    // Skip our own app windows and any that match an exclude phrase
+                    bool isSelf = title.Contains("TypeClipboardText") || title.Contains("PopupHost");
+                    bool isExcluded = excludePhrases.Any(p => !string.IsNullOrEmpty(p) && title.IndexOf(p, StringComparison.OrdinalIgnoreCase) >= 0);
+                    if (!isSelf && !isExcluded)
+                    {
+                        return (hWnd, title);
+                    }
                 }
             }
             return (IntPtr.Zero, "");
@@ -94,19 +156,149 @@ namespace TypeClipboardText
                 contextMenuStrip.Items.RemoveAt(i);
 
             // Add active windows as menu items, starting from the 5th position
+            int inserted = 0;
             for (int i = 0; i < activeWindowsList.Count; i++)
             {
-                var (hWnd, title, icon) = ((IntPtr, string, Icon))activeWindowsList[i];
-
-                ToolStripMenuItem item = new ToolStripMenuItem($"{title}");
-                item.Tag = hWnd; // Store the hWnd in the Tag property for later use append "A" for Auto
-
-                if (icon != null) // Set the icon for the menu item
+                if (activeWindowsList[i] is ValueTuple<IntPtr, string, Icon?> tuple)
                 {
-                    item.Image = icon.ToBitmap();
-                }
+                    var (hWnd, title, icon) = tuple;
 
-                contextMenuStrip.Items.Insert(SEPERATOR_START + i, item);
+                    // Filter by exclude phrases (case-insensitive)
+                    bool excluded = excludePhrases.Any(p => !string.IsNullOrEmpty(p) && title.IndexOf(p, StringComparison.OrdinalIgnoreCase) >= 0);
+                    if (excluded)
+                        continue;
+
+                    ToolStripMenuItem item = new ToolStripMenuItem($"{title}");
+                    item.Tag = hWnd; // Store the hWnd in the Tag property for later use append "A" for Auto
+
+                    if (icon != null) // Set the icon for the menu item
+                    {
+                        item.Image = icon.ToBitmap();
+                    }
+
+                    contextMenuStrip.Items.Insert(SEPERATOR_START + inserted, item);
+                    inserted++; // only increment when an item is actually added
+                }
+            }
+        }
+
+        private void notifyIcon_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            // Get the last active window
+            UpdateActiveWindowsList();
+            UpdateContextMenuWithActiveWindowsList();
+
+            // find first active window that is not .this application
+            var (hWnd, title) = getFirstActiveWindow();
+            LogMessage($"notifyIcon_MouseDoubleClick first active window: hWnd={hWnd} title={title}");
+
+
+            DialogResult result = MessageBox.Show(
+                $"First active Window:\r\n\r\n{title} (hWnd={hWnd})\r\n\r\n Send clipboard text?",
+                    "Question: Send Clipboard Text",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+
+            if (hWnd != IntPtr.Zero && result == DialogResult.Yes)
+            {
+                // bring the window to the foreground
+                SetForegroundWindow(hWnd);
+                // send key stroke 
+                TypeFromClipboard(hWnd);
+            }
+        }
+        
+        private void buttonAddExclude_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string phrase = textExclude?.Text?.Trim() ?? string.Empty;
+                if (string.IsNullOrEmpty(phrase))
+                    return;
+
+                if (!excludePhrases.Contains(phrase, StringComparer.OrdinalIgnoreCase))
+                {
+                    excludePhrases.Add(phrase);
+                    SaveExcludePhrases();
+                    if (listExclude != null) listExclude.Items.Add(phrase);
+                }
+                if (textExclude != null)
+                    textExclude.Text = string.Empty;
+
+                // Reset AcceptButton
+                if (this.AcceptButton == buttonAddExclude)
+                    this.AcceptButton = null;
+            }
+            catch
+            {
+                // ignore
+            }
+
+        }
+
+        private void buttonRemoveExclude_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (listExclude == null || listExclude.SelectedItem == null)
+                    return;
+
+                string phrase = listExclude.SelectedItem.ToString() ?? string.Empty;
+                if (string.IsNullOrEmpty(phrase))
+                    return;
+
+                excludePhrases.RemoveAll(p => string.Equals(p, phrase, StringComparison.OrdinalIgnoreCase));
+                SaveExcludePhrases();
+                listExclude.Items.Remove(listExclude.SelectedItem);
+
+                // Reset AcceptButton when removing
+                if (this.AcceptButton == buttonRemoveExclude)
+                    this.AcceptButton = null;
+            }
+            catch
+            {
+                // ignore
+            }
+        }
+
+        private void textExclude_TextChanged(object? sender, EventArgs e)
+        {
+            try
+            {
+                // When there is text, make Add the default AcceptButton so Enter triggers Add
+                if (!string.IsNullOrWhiteSpace(textExclude?.Text))
+                {
+                    this.AcceptButton = buttonAddExclude;
+                }
+                else
+                {
+                    if (this.AcceptButton == buttonAddExclude)
+                        this.AcceptButton = null;
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+        }
+
+        private void listExclude_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            try
+            {
+                if (listExclude != null && listExclude.SelectedItem != null)
+                {
+                    this.AcceptButton = buttonRemoveExclude;
+                }
+                else
+                {
+                    if (this.AcceptButton == buttonRemoveExclude)
+                        this.AcceptButton = null;
+                }
+            }
+            catch
+            {
+                // ignore
             }
         }
 
@@ -122,7 +314,7 @@ namespace TypeClipboardText
                     GetWindowText(hWnd, sb, size);
 
                     // Get the window's icon
-                    Icon icon = GetWindowIcon(hWnd);
+                    Icon? icon = GetWindowIcon(hWnd);
                     lock (lockObject)
                     {
                         // Store a tuple of hWnd, title and Icon in the ArrayList
@@ -134,7 +326,7 @@ namespace TypeClipboardText
             return true;
         }
 
-        private Icon GetWindowIcon(IntPtr hWnd)
+        private Icon? GetWindowIcon(IntPtr hWnd)
         {
             IntPtr hIcon = SendMessage(hWnd, 0x0080/*WM_GETICON*/, 2/*ICON_SMALL2*/, 0);
             if (hIcon == IntPtr.Zero)
@@ -164,14 +356,14 @@ namespace TypeClipboardText
             if (!string.IsNullOrEmpty(clipboardText))
             {
                 //Update window with Clipboard text
-                textClipboard.Text = clipboardText;
-                labelClipboardLength.Text = clipboardText.Length.ToString();
+                if (textClipboard != null) textClipboard.Text = clipboardText;
+                if (labelClipboardLength != null) labelClipboardLength.Text = clipboardText.Length.ToString();
                 // Update the menu text box with clipboard text
-                toolStripClipboardText.Text = clipboardText;
+                if (toolStripClipboardText != null) toolStripClipboardText.Text = clipboardText;
             }
             else
             {
-                toolStripClipboardText.Text = DEFAULT_TYPE_TEXT;
+                if (toolStripClipboardText != null) toolStripClipboardText.Text = DEFAULT_TYPE_TEXT;
             }
 
             return clipboardText;
@@ -251,17 +443,40 @@ namespace TypeClipboardText
 
         private void LogMessage(string message)
         {
+            // Only log when logging is enabled
+            if (!loggingEnabled)
+                return;
+
+            // Capture the list control locally to avoid race conditions / analyzer warnings
+            var list = listLog;
+            if (list == null)
+                return;
+
             // Create a formatted log entry
             string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}";
 
             // Add to the listbox on the UI thread
             if (InvokeRequired)
             {
-                Invoke(new Action(() => listLog.Items.Add(logEntry)));
+                Invoke(new Action(() => list.Items.Add(logEntry)));
             }
             else
             {
-                listLog.Items.Add(logEntry);
+                list.Items.Add(logEntry);
+            }
+        }
+
+        private void checkEnableLogging_CheckedChanged(object sender, EventArgs e)
+        {
+            // Toggle the runtime logging flag based on checkbox state
+            try
+            {
+                loggingEnabled = checkEnableLogging.Checked;
+            }
+            catch
+            {
+                // Ignore if control not available for some reason
+                loggingEnabled = false;
             }
         }
 
@@ -273,44 +488,34 @@ namespace TypeClipboardText
             Application.Exit();
         }
 
-        private void notifyIcon_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            // Get the last active window
-            UpdateActiveWindowsList();
-            UpdateContextMenuWithActiveWindowsList();
-
-            // find first active window that is not .this application
-            var (hWnd, title) = getFirstActiveWindow();
-            LogMessage($"notifyIcon_MouseDoubleClick first active window: hWnd={hWnd} title={title}");
-            // bring the window to the foreground
-            if (hWnd != IntPtr.Zero)
-            {
-                SetForegroundWindow(hWnd);
-                // send key stroke 
-                TypeFromClipboard(hWnd);
-            }
-        }
-
         private void contextMenuStrip_Opening(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            toolStripClipboardText.Size = new Size(100, 21);
+            if (toolStripClipboardText != null)
+                toolStripClipboardText.Size = new Size(100, 21);
 
             UpdateTextFromClipboard();
             UpdateContextMenuWithActiveWindowsList();
 
             // Set width of toolStripClipboardText to match contextMenuStrip
-            toolStripClipboardText.Size = new Size(contextMenuStrip.Width, 21); // contextMenuStrip.Width;
+            if (toolStripClipboardText != null && contextMenuStrip != null)
+                toolStripClipboardText.Size = new Size(contextMenuStrip.Width, 21); // contextMenuStrip.Width;
         }
 
         private void contextMenuStrip_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
+            // Guard against null ClickedItem
+            if (e.ClickedItem == null)
+                return;
+
             // Exclude clicks on separators and the "Active Windows" menu item itself
             if (e.ClickedItem is ToolStripSeparator || e.ClickedItem.Name == "menuExit")
                 return;
             try
             {
-                // Get the hWnd from the clicked item's Tag
-                IntPtr hWnd = (IntPtr)e.ClickedItem.Tag;
+                // Get the hWnd from the clicked item's Tag, safely
+                IntPtr hWnd = IntPtr.Zero;
+                if (e.ClickedItem.Tag is IntPtr tagHwnd)
+                    hWnd = tagHwnd;
 
                 LogMessage($"contextMenuStrip_ItemClicked window selected: hWnd={hWnd} title={e.ClickedItem.Text}");
 
@@ -331,6 +536,13 @@ namespace TypeClipboardText
 
         private void CopyLogMessagesToClipboard()
         {
+            // Ensure the list control is available and has items
+            if (listLog == null || listLog.Items == null || listLog.Items.Count == 0)
+            {
+                MessageBox.Show("No log messages to copy.", "TypeClipboardText", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
             // Get all log messages from the listbox
             string logText = string.Join(Environment.NewLine, listLog.Items.Cast<string>()); // Join lines with newlines
 
@@ -355,6 +567,25 @@ namespace TypeClipboardText
             UpdateTextFromClipboard();
         }
 
+        private void buttonClearLogs_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (InvokeRequired)
+                {
+                    Invoke(new Action(() => listLog.Items.Clear()));
+                }
+                else
+                {
+                    listLog.Items.Clear();
+                }
+            }
+            catch
+            {
+                // ignore errors clearing logs
+            }
+        }
+
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (e.CloseReason == CloseReason.UserClosing)
@@ -367,7 +598,29 @@ namespace TypeClipboardText
 
         private void toolStripMenuItemShowWindow_Click(object sender, EventArgs e)
         {
-            this.Show();
+            try
+            {
+                // If the form was minimized on startup, restore it to normal before showing
+                //if (this.WindowState == FormWindowState.Minimized)
+                this.WindowState = FormWindowState.Normal;
+
+                this.Show();
+                // Ensure the window is activated and brought to foreground
+                this.Activate();
+                this.BringToFront();
+                // Try native foreground call as well
+                SetForegroundWindow(this.Handle);
+
+                // Toggle TopMost briefly to help ensure it becomes focused on some Windows setups
+                bool prevTop = this.TopMost;
+                this.TopMost = true;
+                this.TopMost = prevTop;
+            }
+            catch
+            {
+                // Ignore any errors - show at least
+                this.Show();
+            }
         }
 
         private void Form1_Shown(object sender, EventArgs e)

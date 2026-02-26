@@ -39,13 +39,20 @@
             toolStripSeparator2 = new ToolStripSeparator();
             toolStripMenuItemShowWindow = new ToolStripMenuItem();
             menuExit = new ToolStripMenuItem();
-            label1 = new Label();
+            labelClipText = new Label();
             textClipboard = new TextBox();
             labelClipboardLength = new Label();
-            label3 = new Label();
-            label2 = new Label();
+            labelClipLen = new Label();
+            labelLog = new Label();
+            labelExclude = new Label();
+            textExclude = new TextBox();
+            buttonAddExclude = new Button();
+            buttonRemoveExclude = new Button();
+            listExclude = new ListBox();
             listLog = new ListBox();
             buttonCopyLogs = new Button();
+            checkEnableLogging = new CheckBox();
+            buttonClearLogs = new Button();
             contextMenuStrip.SuspendLayout();
             SuspendLayout();
             // 
@@ -54,7 +61,7 @@
             notifyIcon.BalloonTipIcon = ToolTipIcon.Info;
             notifyIcon.ContextMenuStrip = contextMenuStrip;
             notifyIcon.Icon = (Icon)resources.GetObject("notifyIcon.Icon");
-            notifyIcon.Text = "Send as keypress clipboard text to the active window";
+            notifyIcon.Text = "Send as keypress, the clipboard text to the active/selected window. Double-Click for auto send or Right-Click for Menu";
             notifyIcon.Visible = true;
             notifyIcon.MouseDoubleClick += notifyIcon_MouseDoubleClick;
             // 
@@ -82,7 +89,7 @@
             toolStripClipboardText.BackColor = Color.MistyRose;
             toolStripClipboardText.BorderStyle = BorderStyle.FixedSingle;
             toolStripClipboardText.Font = new Font("Courier New", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            toolStripClipboardText.MaxLength = 10;
+            toolStripClipboardText.MaxLength = 100;
             toolStripClipboardText.Name = "toolStripClipboardText";
             toolStripClipboardText.Size = new Size(300, 21);
             // 
@@ -123,15 +130,15 @@
             menuExit.Text = "&Quit Application";
             menuExit.Click += menuExit_Click;
             // 
-            // label1
+            // labelClipText
             // 
-            label1.AutoSize = true;
-            label1.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label1.Location = new Point(12, 9);
-            label1.Name = "label1";
-            label1.Size = new Size(90, 15);
-            label1.TabIndex = 1;
-            label1.Text = "Clipboard Text:";
+            labelClipText.AutoSize = true;
+            labelClipText.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            labelClipText.Location = new Point(12, 9);
+            labelClipText.Name = "labelClipText";
+            labelClipText.Size = new Size(90, 15);
+            labelClipText.TabIndex = 1;
+            labelClipText.Text = "Clipboard Text:";
             // 
             // textClipboard
             // 
@@ -141,7 +148,7 @@
             textClipboard.Name = "textClipboard";
             textClipboard.ReadOnly = true;
             textClipboard.ScrollBars = ScrollBars.Vertical;
-            textClipboard.Size = new Size(882, 112);
+            textClipboard.Size = new Size(638, 57);
             textClipboard.TabIndex = 2;
             // 
             // labelClipboardLength
@@ -156,39 +163,89 @@
             labelClipboardLength.Text = "0";
             labelClipboardLength.TextAlign = ContentAlignment.MiddleRight;
             // 
-            // label3
+            // labelClipLen
             // 
-            label3.AutoSize = true;
-            label3.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label3.Location = new Point(164, 9);
-            label3.Name = "label3";
-            label3.Size = new Size(49, 15);
-            label3.TabIndex = 4;
-            label3.Text = "Length:";
+            labelClipLen.AutoSize = true;
+            labelClipLen.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            labelClipLen.Location = new Point(164, 9);
+            labelClipLen.Name = "labelClipLen";
+            labelClipLen.Size = new Size(49, 15);
+            labelClipLen.TabIndex = 4;
+            labelClipLen.Text = "Length:";
             // 
-            // label2
+            // labelLog
             // 
-            label2.AutoSize = true;
-            label2.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label2.Location = new Point(12, 155);
-            label2.Name = "label2";
-            label2.Size = new Size(30, 15);
-            label2.TabIndex = 5;
-            label2.Text = "Log:";
+            labelLog.AutoSize = true;
+            labelLog.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            labelLog.Location = new Point(11, 301);
+            labelLog.Name = "labelLog";
+            labelLog.Size = new Size(30, 15);
+            labelLog.TabIndex = 5;
+            labelLog.Text = "Log:";
+            // 
+            // labelExclude
+            // 
+            labelExclude.AutoSize = true;
+            labelExclude.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            labelExclude.Location = new Point(12, 115);
+            labelExclude.Name = "labelExclude";
+            labelExclude.Size = new Size(310, 15);
+            labelExclude.TabIndex = 10;
+            labelExclude.Text = "Window names to be excluded in the right-click menu:";
+            // 
+            // textExclude
+            // 
+            textExclude.Location = new Point(335, 133);
+            textExclude.Name = "textExclude";
+            textExclude.PlaceholderText = "Enter exclude word/phrase";
+            textExclude.Size = new Size(177, 23);
+            textExclude.TabIndex = 12;
+            textExclude.TextChanged += textExclude_TextChanged;
+            // 
+            // buttonAddExclude
+            // 
+            buttonAddExclude.Location = new Point(518, 133);
+            buttonAddExclude.Name = "buttonAddExclude";
+            buttonAddExclude.Size = new Size(63, 23);
+            buttonAddExclude.TabIndex = 13;
+            buttonAddExclude.Text = "&Add";
+            buttonAddExclude.UseVisualStyleBackColor = true;
+            buttonAddExclude.Click += buttonAddExclude_Click;
+            // 
+            // buttonRemoveExclude
+            // 
+            buttonRemoveExclude.Location = new Point(587, 133);
+            buttonRemoveExclude.Name = "buttonRemoveExclude";
+            buttonRemoveExclude.Size = new Size(63, 23);
+            buttonRemoveExclude.TabIndex = 14;
+            buttonRemoveExclude.Text = "&Remove";
+            buttonRemoveExclude.UseVisualStyleBackColor = true;
+            buttonRemoveExclude.Click += buttonRemoveExclude_Click;
+            // 
+            // listExclude
+            // 
+            listExclude.BackColor = SystemColors.Control;
+            listExclude.FormattingEnabled = true;
+            listExclude.ItemHeight = 15;
+            listExclude.Location = new Point(12, 133);
+            listExclude.Name = "listExclude";
+            listExclude.Size = new Size(317, 154);
+            listExclude.TabIndex = 11;
+            listExclude.SelectedIndexChanged += listExclude_SelectedIndexChanged;
             // 
             // listLog
             // 
             listLog.BackColor = SystemColors.Control;
             listLog.FormattingEnabled = true;
             listLog.ItemHeight = 15;
-            listLog.Location = new Point(12, 174);
+            listLog.Location = new Point(12, 319);
             listLog.Name = "listLog";
-            listLog.Size = new Size(882, 289);
+            listLog.Size = new Size(638, 154);
             listLog.TabIndex = 6;
             // 
             // buttonCopyLogs
             // 
-            buttonCopyLogs.Location = new Point(819, 147);
+            buttonCopyLogs.Location = new Point(494, 290);
             buttonCopyLogs.Name = "buttonCopyLogs";
             buttonCopyLogs.Size = new Size(75, 23);
             buttonCopyLogs.TabIndex = 7;
@@ -196,20 +253,48 @@
             buttonCopyLogs.UseVisualStyleBackColor = true;
             buttonCopyLogs.Click += buttonCopyLogs_Click;
             // 
+            // checkEnableLogging
+            // 
+            checkEnableLogging.AutoSize = true;
+            checkEnableLogging.Location = new Point(380, 294);
+            checkEnableLogging.Name = "checkEnableLogging";
+            checkEnableLogging.Size = new Size(108, 19);
+            checkEnableLogging.TabIndex = 8;
+            checkEnableLogging.Text = "Enable Logging";
+            checkEnableLogging.UseVisualStyleBackColor = true;
+            checkEnableLogging.CheckedChanged += checkEnableLogging_CheckedChanged;
+            // 
+            // buttonClearLogs
+            // 
+            buttonClearLogs.Location = new Point(575, 290);
+            buttonClearLogs.Name = "buttonClearLogs";
+            buttonClearLogs.Size = new Size(75, 23);
+            buttonClearLogs.TabIndex = 9;
+            buttonClearLogs.Text = "&Clear Logs";
+            buttonClearLogs.UseVisualStyleBackColor = true;
+            buttonClearLogs.Click += buttonClearLogs_Click;
+            // 
             // TCT
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             AutoSize = true;
             BackColor = SystemColors.Control;
-            ClientSize = new Size(908, 476);
+            ClientSize = new Size(662, 483);
             Controls.Add(buttonCopyLogs);
+            Controls.Add(buttonClearLogs);
+            Controls.Add(checkEnableLogging);
+            Controls.Add(listExclude);
+            Controls.Add(textExclude);
+            Controls.Add(buttonAddExclude);
+            Controls.Add(buttonRemoveExclude);
             Controls.Add(listLog);
-            Controls.Add(label2);
-            Controls.Add(label3);
+            Controls.Add(labelExclude);
+            Controls.Add(labelLog);
+            Controls.Add(labelClipLen);
             Controls.Add(labelClipboardLength);
             Controls.Add(textClipboard);
-            Controls.Add(label1);
+            Controls.Add(labelClipText);
             FormBorderStyle = FormBorderStyle.FixedSingle;
             Icon = (Icon)resources.GetObject("$this.Icon");
             MaximizeBox = false;
@@ -231,18 +316,25 @@
         private NotifyIcon notifyIcon;
         private ContextMenuStrip contextMenuStrip;
         private ToolStripMenuItem menuExit;
-        private Label label1;
+        private Label labelClipText;
         private TextBox textClipboard;
         private Label labelClipboardLength;
-        private Label label3;
+        private Label labelClipLen;
         private ToolStripTextBox toolStripClipboardText;
         private ToolStripSeparator toolStripSeparator1;
         private ToolStripSeparator toolStripSeparator2;
         private ToolStripMenuItem toolStripMenuInstructClipboardDisabled;
         private ToolStripMenuItem toolStripMenuInstructWindowsDisabled;
-        private Label label2;
+        private Label labelLog;
         private ListBox listLog;
         private Button buttonCopyLogs;
+        private CheckBox checkEnableLogging;
+        private Button buttonClearLogs;
+        private Label labelExclude;
+        private TextBox textExclude;
+        private Button buttonAddExclude;
+        private Button buttonRemoveExclude;
+        private ListBox listExclude;
         private ToolStripMenuItem toolStripMenuItemShowWindow;
     }
 }
