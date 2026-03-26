@@ -192,12 +192,12 @@ namespace TypeClipboardText
             var (hWnd, title) = getFirstActiveWindow();
             LogMessage($"notifyIcon_MouseDoubleClick first active window: hWnd={hWnd} title={title}");
 
-
-            DialogResult result = MessageBox.Show(
-                $"First active Window:\r\n\r\n{title} (hWnd={hWnd})\r\n\r\n Send clipboard text?",
-                    "Question: Send Clipboard Text",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+            string msg = $"First active Window:\r\n\r\n{title} (hWnd={hWnd})\r\n\r\nSend clipboard text?";
+            DialogResult result;
+            using (var dlg = new AutoConfirmDialog(msg, "Question: Send Clipboard Text?", 2000))
+            {
+                result = dlg.ShowDialog(this);
+            }
 
             if (hWnd != IntPtr.Zero && result == DialogResult.Yes)
             {
